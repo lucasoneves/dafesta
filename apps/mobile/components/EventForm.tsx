@@ -41,6 +41,8 @@ export function EventForm({
     }
     if (!date) {
       nextErrors.date = "A data é obrigatória.";
+    } else if (date < todayISOString()) {
+      nextErrors.date = "A data não pode estar no passado.";
     }
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -173,4 +175,12 @@ export function EventForm({
       </View>
     </View>
   );
+}
+
+function todayISOString(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }

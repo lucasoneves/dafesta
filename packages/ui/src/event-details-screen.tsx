@@ -160,9 +160,8 @@ export function EventDetailsScreen({
         )}
 
         <Button
-          className="mt-6 w-full"
+          className="mt-6 w-full bg-secondary hover:bg-secondary-container"
           size="lg"
-          variant="secondary"
           onClick={handleShare}
         >
           Compartilhar link

@@ -7,6 +7,7 @@ import type {
 import type { StoredParticipant } from "@dafesta/database";
 import { Button } from "./button.tsx";
 import { Input } from "./input.tsx";
+import { Toast } from "./toast.tsx";
 import { cn } from "./cn.ts";
 
 export interface InviteParticipantInput {
@@ -88,17 +89,6 @@ export function RsvpPanel({
 
   return (
     <section className={cn("flex flex-col gap-5", className)}>
-      {success && (
-        <div className="rounded-md border border-secondary-container bg-secondary-container p-3">
-          <p className="font-label text-label-sm text-on-secondary-container">{success}</p>
-        </div>
-      )}
-      {error && (
-        <div className="rounded-md border border-error-container bg-error-container p-3">
-          <p className="font-label text-label-sm text-on-error-container">{error}</p>
-        </div>
-      )}
-
       <div className="grid grid-cols-3 gap-3">
         <SummaryStat label="Confirmados" value={confirmed} tone="success" />
         <SummaryStat label="Pendentes" value={pending} tone="pending" />
@@ -207,7 +197,7 @@ export function RsvpPanel({
                         "flex flex-1 items-center justify-center rounded-full px-2 py-1.5 font-label text-label-sm font-semibold transition-all duration-150",
                         "disabled:opacity-60",
                         isActive
-                          ? "bg-primary text-on-primary"
+                          ? "bg-secondary text-on-secondary"
                           : "bg-surface-container-high text-on-surface-variant hover:bg-surface-container-low"
                       )}
                     >
@@ -219,6 +209,17 @@ export function RsvpPanel({
             </div>
           ))}
         </div>
+      )}
+
+      {(success || error) && (
+        <Toast
+          tone={error ? "error" : "success"}
+          message={(error ?? success) ?? ""}
+          onDismiss={() => {
+            setError(null);
+            setSuccess(null);
+          }}
+        />
       )}
     </section>
   );
@@ -238,9 +239,9 @@ function SummaryStat({
       <span
         className={cn(
           "font-headline text-headline-lg font-bold",
-          tone === "success" && "text-secondary",
-          tone === "pending" && "text-primary",
-          tone === "error" && "text-error"
+          tone === "success" && "text-green-800",
+          tone === "pending" && "text-yellow-800",
+          tone === "error" && "text-red-800"
         )}
       >
         {value}
@@ -256,10 +257,10 @@ function CurrentStatusBadge({ status }: { status: EventParticipantStatus }) {
   return (
     <span
       className={cn(
-        "shrink-0 rounded-full px-3 py-1 font-label text-label-sm font-medium",
-        status === "confirmed" && "bg-primary-container text-on-primary-container",
-        status === "declined" && "bg-error-container text-on-error-container",
-        status === "pending" && "bg-surface-container-high text-on-surface-variant"
+        "shrink-0 rounded-full px-2.5 py-0.5 font-label text-label-sm font-medium",
+        status === "confirmed" && "bg-green-100 text-green-800",
+        status === "declined" && "bg-red-100 text-red-800",
+        status === "pending" && "bg-yellow-100 text-yellow-800"
       )}
     >
       {RSVP_LABEL[status]}

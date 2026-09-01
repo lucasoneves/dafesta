@@ -22,6 +22,7 @@ import type {
 } from "@dafesta/database";
 import type { EventParticipantStatus } from "@dafesta/types";
 import { formatDate } from "@dafesta/utils";
+import { Toast, type ToastData } from "../components/Toast";
 
 type TabId = "resumo" | "convidados" | "lista";
 
@@ -58,10 +59,7 @@ export default function EventDetailsScreen() {
   const [isUpdatingParticipantId, setIsUpdatingParticipantId] = useState<
     string | null
   >(null);
-  const [rsvpMessage, setRsvpMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
+  const [toast, setToast] = useState<ToastData | null>(null);
 
   if (authLoading) {
     return (
@@ -89,13 +87,13 @@ export default function EventDetailsScreen() {
 
   async function handleAddParticipant(input: { name: string; email?: string }) {
     if (!eventId) return;
-    setRsvpMessage(null);
+    setToast(null);
     setIsAdding(true);
     try {
       await addParticipant(eventId, input, user);
-      setRsvpMessage({ type: "success", text: "Convidado adicionado com sucesso!" });
+      setToast({ type: "success", text: "Convidado adicionado com sucesso!" });
     } catch (err) {
-      setRsvpMessage({
+      setToast({
         type: "error",
         text: err instanceof Error ? err.message : String(err),
       });
@@ -109,13 +107,13 @@ export default function EventDetailsScreen() {
     status: EventParticipantStatus
   ) {
     if (!eventId) return;
-    setRsvpMessage(null);
+    setToast(null);
     setIsUpdatingParticipantId(participantId);
     try {
       await updateRsvpStatus(eventId, participantId, status);
-      setRsvpMessage({ type: "success", text: "Status de presença atualizado." });
+      setToast({ type: "success", text: "Status de presença atualizado." });
     } catch (err) {
-      setRsvpMessage({
+      setToast({
         type: "error",
         text: err instanceof Error ? err.message : String(err),
       });
@@ -228,9 +226,9 @@ export default function EventDetailsScreen() {
 
           <Pressable
             onPress={handleShare}
-            className="mt-6 w-full items-center rounded-full border-2 border-secondary py-3.5 active:bg-secondary/10"
+            className="mt-6 w-full items-center rounded-full bg-secondary py-3.5 active:bg-secondary-container"
           >
-            <Text className="font-label text-label-md font-semibold text-secondary">
+            <Text className="font-label text-label-md font-semibold text-on-secondary">
               Compartilhar link
             </Text>
           </Pressable>
@@ -273,12 +271,14 @@ export default function EventDetailsScreen() {
               onUpdateStatus={handleUpdateStatus}
               isUpdatingParticipantId={isUpdatingParticipantId}
               isAdding={isAdding}
-              message={rsvpMessage}
+              onNotify={setToast}
             />
           )}
           {activeTab === "lista" && <ListTab listItems={listItems} />}
         </View>
       </ScrollView>
+
+      <Toast toast={toast} onDismiss={() => setToast(null)} />
     </View>
   );
 }
@@ -342,7 +342,7 @@ interface GuestsTabProps {
   ) => Promise<void>;
   isUpdatingParticipantId: string | null;
   isAdding: boolean;
-  message: { type: "success" | "error"; text: string } | null;
+  onNotify: (toast: ToastData) => void;
 }
 
 function GuestsTab({
@@ -351,21 +351,19 @@ function GuestsTab({
   onUpdateStatus,
   isUpdatingParticipantId,
   isAdding,
-  message,
+  onNotify,
 }: GuestsTabProps) {
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [localError, setLocalError] = useState<string | null>(null);
 
   const confirmed = participants.filter((p) => p.status === "confirmed").length;
   const pending = participants.filter((p) => p.status === "pending").length;
   const declined = participants.filter((p) => p.status === "declined").length;
 
   async function handleAdd() {
-    setLocalError(null);
     if (!name.trim()) {
-      setLocalError("Informe o nome do convidado.");
+      onNotify({ type: "error", text: "Informe o nome do convidado." });
       return;
     }
     await onAddParticipant({ name: name.trim(), email: email.trim() || undefined });
@@ -376,33 +374,6 @@ function GuestsTab({
 
   return (
     <View className="gap-5">
-      {message ? (
-        <View
-          className={`rounded-md border p-3 ${
-            message.type === "success"
-              ? "border-secondary-container bg-secondary-container"
-              : "border-error-container bg-error-container"
-          }`}
-        >
-          <Text
-            className={`font-label text-label-sm ${
-              message.type === "success"
-                ? "text-on-secondary-container"
-                : "text-on-error-container"
-            }`}
-          >
-            {message.text}
-          </Text>
-        </View>
-      ) : null}
-      {localError ? (
-        <View className="rounded-md border border-error-container bg-error-container p-3">
-          <Text className="font-label text-label-sm text-on-error-container">
-            {localError}
-          </Text>
-        </View>
-      ) : null}
-
       <View className="flex-row gap-3">
         <SummaryStat label="Confirmados" value={confirmed} tone="success" />
         <SummaryStat label="Pendentes" value={pending} tone="pending" />
@@ -528,17 +499,17 @@ function GuestsTab({
                         onPress={() => onUpdateStatus(participant.id, status)}
                         className={`flex-1 items-center rounded-full px-2 py-2 ${
                           isActive
-                            ? "bg-primary"
+                            ? "bg-secondary"
                             : "bg-surface-container-high active:bg-surface-container-low"
                         }`}
                       >
                         {isUpdating ? (
-                          <ActivityIndicator size="small" color="#af0062" />
+                          <ActivityIndicator size="small" color="#1259c3" />
                         ) : (
                           <Text
                             className={`font-label text-label-sm font-semibold ${
                               isActive
-                                ? "text-on-primary"
+                                ? "text-on-secondary"
                                 : "text-on-surface-variant"
                             }`}
                           >
@@ -561,21 +532,21 @@ function GuestsTab({
 function StatusBadge({ status }: { status: EventParticipantStatus }) {
   return (
     <View
-      className={`rounded-full px-3 py-1 ${
+      className={`rounded-full px-2.5 py-0.5 ${
         status === "confirmed"
-          ? "bg-primary-container"
+          ? "bg-green-100"
           : status === "declined"
-          ? "bg-error-container"
-          : "bg-surface-container-high"
+          ? "bg-red-100"
+          : "bg-yellow-100"
       }`}
     >
       <Text
         className={`font-label text-label-sm font-medium ${
           status === "confirmed"
-            ? "text-on-primary-container"
+            ? "text-green-800"
             : status === "declined"
-            ? "text-on-error-container"
-            : "text-on-surface-variant"
+            ? "text-red-800"
+            : "text-yellow-800"
         }`}
       >
         {RSVP_LABEL[status] ?? status}
@@ -598,10 +569,10 @@ function SummaryStat({
       <Text
         className={`font-headline text-headline-lg font-bold ${
           tone === "success"
-            ? "text-secondary"
+            ? "text-green-800"
             : tone === "pending"
-            ? "text-primary"
-            : "text-error"
+            ? "text-yellow-800"
+            : "text-red-800"
         }`}
       >
         {value}

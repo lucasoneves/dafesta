@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { CreateEventPayload } from "@dafesta/types";
 import { Button } from "./button.tsx";
 import { Input } from "./input.tsx";
@@ -33,6 +33,11 @@ export function EventForm({
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [minDate, setMinDate] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    setMinDate(todayISOString());
+  }, []);
 
   function validate(): boolean {
     const nextErrors: FormErrors = {};
@@ -41,6 +46,8 @@ export function EventForm({
     }
     if (!date) {
       nextErrors.date = "A data é obrigatória.";
+    } else if (date < todayISOString()) {
+      nextErrors.date = "A data não pode estar no passado.";
     }
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -88,6 +95,7 @@ export function EventForm({
         type="date"
         value={date}
         onChange={(e) => setDate(e.target.value)}
+        min={minDate}
         error={errors.date}
         disabled={isSubmitting}
       />
@@ -140,4 +148,12 @@ export function EventForm({
       </div>
     </form>
   );
+}
+
+function todayISOString(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
