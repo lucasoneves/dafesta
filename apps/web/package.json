@@ -4,25 +4,39 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3000",
-    "build": "next build",
+    "dev": "next dev --port 3000 --webpack",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint --max-warnings 0",
-    "check-types": "next typegen && tsc --noEmit"
+    "check-types": "next typegen && tsc --noEmit",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
-    "@repo/ui": "*",
+    "@dafesta/database": "*",
+    "@dafesta/ui": "*",
+    "@dafesta/types": "*",
+    "@dafesta/utils": "*",
     "next": "16.2.0",
+    "nativewind": "^4.1.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-native": "~0.76.0",
+    "react-native-css-interop": "^0.1.0",
+    "react-native-web": "~0.19.13"
   },
   "devDependencies": {
-    "@repo/eslint-config": "*",
-    "@repo/typescript-config": "*",
+    "@dafesta/eslint-config": "*",
+    "@dafesta/typescript-config": "*",
+    "@playwright/test": "^1.62.1",
     "@types/node": "^22.15.3",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
+    "autoprefixer": "^10.4.21",
     "eslint": "^9.39.1",
+    "postcss": "^8.5.4",
+    "tailwindcss": "^3.4.0",
     "typescript": "5.9.2"
   }
 }

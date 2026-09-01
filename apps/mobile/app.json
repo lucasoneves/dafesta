@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Dafesta",
+    "slug": "dafesta",
+    "scheme": "dafesta",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.dafesta.app"
+    },
+    "android": {
+      "package": "com.dafesta.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#fcf9f8"
+      }
+    },
+    "plugins": [
+      "expo-asset",
+      "expo-router",
+      [
+        "expo-auth-session",
+        {
+          "scheme": "dafesta"
+        }
+      ]
+    ]
+  }
+}

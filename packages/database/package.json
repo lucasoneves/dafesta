@@ -1,0 +1,28 @@
+{
+  "name": "@dafesta/database",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./firebase": "./src/firebase.ts",
+    "./auth": "./src/auth.ts",
+    "./firestore": "./src/firestore.ts",
+    "./participants": "./src/participants.ts",
+    "./hooks/use-auth": "./src/hooks/use-auth.ts",
+    "./hooks/use-event-details": "./src/hooks/use-event-details.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dafesta/types": "workspace:*",
+    "firebase": "^11.8.0",
+    "react": "^19.2.0"
+  },
+  "devDependencies": {
+    "@dafesta/typescript-config": "*",
+    "@types/react": "19.2.2",
+    "typescript": "5.9.2"
+  }
+}

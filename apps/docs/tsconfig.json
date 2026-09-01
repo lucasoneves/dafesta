@@ -1,6 +1,16 @@
 {
-  "extends": "@repo/typescript-config/nextjs.json",
+  "extends": "@dafesta/typescript-config/nextjs.json",
   "compilerOptions": {
+    "paths": {
+      "@dafesta/ui": ["../../packages/ui/src"],
+      "@dafesta/ui/*": ["../../packages/ui/src/*"],
+      "@dafesta/types": ["../../packages/types/src"],
+      "@dafesta/types/*": ["../../packages/types/src/*"],
+      "@dafesta/utils": ["../../packages/utils/src"],
+      "@dafesta/utils/*": ["../../packages/utils/src/*"],
+      "@dafesta/database": ["../../packages/database/src"],
+      "@dafesta/database/*": ["../../packages/database/src/*"]
+    },
     "plugins": [
       {
         "name": "next"

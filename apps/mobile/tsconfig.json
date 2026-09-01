@@ -1,0 +1,44 @@
+{
+  "extends": "@dafesta/typescript-config/react-library.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "paths": {
+      "@dafesta/ui": [
+        "../../packages/ui/src"
+      ],
+      "@dafesta/ui/*": [
+        "../../packages/ui/src/*"
+      ],
+      "@dafesta/types": [
+        "../../packages/types/src"
+      ],
+      "@dafesta/types/*": [
+        "../../packages/types/src/*"
+      ],
+      "@dafesta/utils": [
+        "../../packages/utils/src"
+      ],
+      "@dafesta/utils/*": [
+        "../../packages/utils/src/*"
+      ],
+      "@dafesta/database": [
+        "../../packages/database/src"
+      ],
+      "@dafesta/database/*": [
+        "../../packages/database/src/*"
+      ]
+    },
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "strictNullChecks": true
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "nativewind-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

@@ -15,6 +15,12 @@ node_modules
 # Testing
 coverage
 
+# Playwright
+playwright-report/
+test-results/
+blob-report/
+playwright/.cache/
+
 # Turbo
 .turbo
 
@@ -27,6 +33,10 @@ out/
 build
 dist
 
+# Expo
+.expo/
+dist/
+web-build/
 
 # Debug
 npm-debug.log*
@@ -36,3 +46,6 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Bun
+bun.lock
