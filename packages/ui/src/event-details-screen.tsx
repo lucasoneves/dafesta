@@ -13,6 +13,10 @@ import { Tabs } from "./tabs.tsx";
 import { EmptyState } from "./empty-state.tsx";
 import { Skeleton } from "./skeleton.tsx";
 import { RsvpPanel, type InviteParticipantInput } from "./rsvp-panel.tsx";
+import {
+  CollaborativeList,
+  type AddListItemInput,
+} from "./collaborative-list.tsx";
 import { cn } from "./cn.ts";
 
 type TabId = "resumo" | "convidados" | "lista";
@@ -21,6 +25,7 @@ interface EventDetailsScreenProps {
   event: EventWithId | null;
   participants: StoredParticipant[];
   listItems: StoredListItem[];
+  currentUserId?: string;
   loading?: boolean;
   notFound?: boolean;
   error?: string | null;
@@ -34,25 +39,27 @@ interface EventDetailsScreenProps {
   ) => Promise<void>;
   isUpdatingParticipantId?: string | null;
   isAdding?: boolean;
+  onAddListItem?: (input: AddListItemInput) => Promise<void>;
+  onClaimListItem?: (itemId: string) => Promise<void>;
+  onReleaseListItem?: (itemId: string) => Promise<void>;
+  onDeleteListItem?: (itemId: string) => Promise<void>;
+  isAddingListItem?: boolean;
+  pendingListItemId?: string | null;
   className?: string;
 }
 
-const CATEGORY_LABEL: Record<string, string> = {
-  food: "Comida",
-  drink: "Bebida",
-  decoration: "Decoração",
-  utensils: "Utensílios",
-  entertainment: "Entretenimento",
-  other: "Outros",
-};
-
 async function noopAddParticipant(): Promise<void> {}
 async function noopUpdateStatus(): Promise<void> {}
+async function noopAddListItem(): Promise<void> {}
+async function noopClaimListItem(): Promise<void> {}
+async function noopReleaseListItem(): Promise<void> {}
+async function noopDeleteListItem(): Promise<void> {}
 
 export function EventDetailsScreen({
   event,
   participants,
   listItems,
+  currentUserId = "",
   loading = false,
   notFound = false,
   error = null,
@@ -63,6 +70,12 @@ export function EventDetailsScreen({
   onUpdateStatus,
   isUpdatingParticipantId = null,
   isAdding = false,
+  onAddListItem,
+  onClaimListItem,
+  onReleaseListItem,
+  onDeleteListItem,
+  isAddingListItem = false,
+  pendingListItemId = null,
   className,
 }: EventDetailsScreenProps) {
   const [activeTab, setActiveTab] = useState<TabId>("resumo");
@@ -190,7 +203,18 @@ export function EventDetailsScreen({
               isAdding={isAdding}
             />
           )}
-          {activeTab === "lista" && <ListTab listItems={listItems} />}
+          {activeTab === "lista" && (
+            <ListTab
+              items={listItems}
+              currentUserId={currentUserId}
+              onAdd={onAddListItem ?? noopAddListItem}
+              onClaim={onClaimListItem ?? noopClaimListItem}
+              onRelease={onReleaseListItem ?? noopReleaseListItem}
+              onDelete={onDeleteListItem ?? noopDeleteListItem}
+              isAdding={isAddingListItem}
+              pendingItemId={pendingListItemId}
+            />
+          )}
         </div>
       </main>
     </div>
@@ -251,43 +275,35 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ListTab({ listItems }: { listItems: StoredListItem[] }) {
-  if (listItems.length === 0) {
-    return (
-      <EmptyState
-        title="A lista está vazia"
-        description="Os itens da lista colaborativa aparecerão aqui. Em breve será possível adicionar e marcar o que você vai levar."
-      />
-    );
-  }
-
+function ListTab({
+  items,
+  currentUserId,
+  onAdd,
+  onClaim,
+  onRelease,
+  onDelete,
+  isAdding,
+  pendingItemId,
+}: {
+  items: StoredListItem[];
+  currentUserId: string;
+  onAdd: (input: AddListItemInput) => Promise<void>;
+  onClaim: (itemId: string) => Promise<void>;
+  onRelease: (itemId: string) => Promise<void>;
+  onDelete: (itemId: string) => Promise<void>;
+  isAdding: boolean;
+  pendingItemId: string | null;
+}) {
   return (
-    <section className="flex flex-col gap-3">
-      {listItems.map((item) => (
-        <div
-          key={item.id}
-          className="flex items-center justify-between gap-3 rounded-lg bg-surface-container-lowest p-4 shadow-card"
-        >
-          <div className="min-w-0">
-            <p className="truncate font-label text-label-md font-semibold text-on-surface">
-              {item.title}
-            </p>
-            <p className="font-label text-label-sm capitalize text-on-surface-variant">
-              {CATEGORY_LABEL[item.category] ?? item.category}
-            </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <span className="rounded-full bg-primary-container px-2.5 py-1 font-label text-label-sm font-semibold text-on-primary-container">
-              {item.quantity > 0 ? `x${item.quantity}` : "1"}
-            </span>
-            {item.isCompleted ? (
-              <span className="rounded-full bg-secondary/15 px-2.5 py-1 font-label text-label-sm font-semibold text-secondary">
-                Levo eu
-              </span>
-            ) : null}
-          </div>
-        </div>
-      ))}
-    </section>
+    <CollaborativeList
+      items={items}
+      currentUserId={currentUserId}
+      onAdd={onAdd}
+      onClaim={onClaim}
+      onRelease={onRelease}
+      onDelete={onDelete}
+      isAdding={isAdding}
+      pendingItemId={pendingItemId}
+    />
   );
 }

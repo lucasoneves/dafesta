@@ -14,6 +14,10 @@ import {
   useEventDetails,
   addParticipant,
   updateRsvpStatus,
+  addListItem,
+  claimListItem,
+  releaseListItem,
+  deleteListItem,
 } from "@dafesta/database";
 import type {
   EventWithId,
@@ -23,6 +27,10 @@ import type {
 import type { EventParticipantStatus } from "@dafesta/types";
 import { formatDate } from "@dafesta/utils";
 import { Toast, type ToastData } from "../components/Toast";
+import {
+  CollaborativeList,
+  type AddListItemInput,
+} from "../components/CollaborativeList";
 
 type TabId = "resumo" | "convidados" | "lista";
 
@@ -30,15 +38,6 @@ const RSVP_LABEL: Record<string, string> = {
   confirmed: "Confirmado",
   declined: "Recusado",
   pending: "Pendente",
-};
-
-const CATEGORY_LABEL: Record<string, string> = {
-  food: "Comida",
-  drink: "Bebida",
-  decoration: "Decoração",
-  utensils: "Utensílios",
-  entertainment: "Entretenimento",
-  other: "Outros",
 };
 
 const TABS: { id: TabId; label: string }[] = [
@@ -59,6 +58,10 @@ export default function EventDetailsScreen() {
   const [isUpdatingParticipantId, setIsUpdatingParticipantId] = useState<
     string | null
   >(null);
+  const [isAddingListItem, setIsAddingListItem] = useState(false);
+  const [pendingListItemId, setPendingListItemId] = useState<string | null>(
+    null
+  );
   const [toast, setToast] = useState<ToastData | null>(null);
 
   if (authLoading) {
@@ -119,6 +122,74 @@ export default function EventDetailsScreen() {
       });
     } finally {
       setIsUpdatingParticipantId(null);
+    }
+  }
+
+  async function handleAddListItem(input: AddListItemInput) {
+    if (!eventId) return;
+    setToast(null);
+    setIsAddingListItem(true);
+    try {
+      await addListItem(eventId, input, user);
+      setToast({ type: "success", text: "Item adicionado à lista!" });
+    } catch (err) {
+      setToast({
+        type: "error",
+        text: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setIsAddingListItem(false);
+    }
+  }
+
+  async function handleClaimListItem(itemId: string) {
+    if (!eventId) return;
+    setToast(null);
+    setPendingListItemId(itemId);
+    try {
+      await claimListItem(eventId, itemId, user);
+      setToast({ type: "success", text: "¡Genial, você leva o item!" });
+    } catch (err) {
+      setToast({
+        type: "error",
+        text: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setPendingListItemId(null);
+    }
+  }
+
+  async function handleReleaseListItem(itemId: string) {
+    if (!eventId) return;
+    setToast(null);
+    setPendingListItemId(itemId);
+    try {
+      await releaseListItem(eventId, itemId, user);
+      setToast({ type: "success", text: "Item desmarcado." });
+    } catch (err) {
+      setToast({
+        type: "error",
+        text: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setPendingListItemId(null);
+    }
+  }
+
+  async function handleDeleteListItem(itemId: string) {
+    if (!eventId) return;
+    setToast(null);
+    setPendingListItemId(itemId);
+    try {
+      await deleteListItem(itemId);
+      setToast({ type: "success", text: "Item removido da lista." });
+    } catch (err) {
+      setToast({
+        type: "error",
+        text: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setPendingListItemId(null);
     }
   }
 
@@ -274,7 +345,19 @@ export default function EventDetailsScreen() {
               onNotify={setToast}
             />
           )}
-          {activeTab === "lista" && <ListTab listItems={listItems} />}
+          {activeTab === "lista" && (
+            <ListTab
+              items={listItems}
+              currentUserId={user?.uid ?? ""}
+              onAdd={handleAddListItem}
+              onClaim={handleClaimListItem}
+              onRelease={handleReleaseListItem}
+              onDelete={handleDeleteListItem}
+              isAdding={isAddingListItem}
+              pendingItemId={pendingListItemId}
+              onNotify={setToast}
+            />
+          )}
         </View>
       </ScrollView>
 
@@ -584,48 +667,38 @@ function SummaryStat({
   );
 }
 
-function ListTab({ listItems }: { listItems: StoredListItem[] }) {
-  if (listItems.length === 0) {
-    return (
-      <View className="items-center rounded-lg border border-dashed border-outline-variant px-6 py-12">
-        <Text className="text-center font-headline text-headline-md font-semibold text-on-surface">
-          A lista está vazia
-        </Text>
-        <Text className="mt-2 text-center font-body text-body-md text-on-surface-variant">
-          Os itens da lista colaborativa aparecerão aqui. Em breve será possível
-          adicionar e marcar o que você vai levar.
-        </Text>
-      </View>
-    );
-  }
-
+function ListTab({
+  items,
+  currentUserId,
+  onAdd,
+  onClaim,
+  onRelease,
+  onDelete,
+  isAdding,
+  pendingItemId,
+  onNotify,
+}: {
+  items: StoredListItem[];
+  currentUserId: string;
+  onAdd: (input: AddListItemInput) => Promise<void>;
+  onClaim: (itemId: string) => Promise<void>;
+  onRelease: (itemId: string) => Promise<void>;
+  onDelete: (itemId: string) => Promise<void>;
+  isAdding: boolean;
+  pendingItemId: string | null;
+  onNotify: (toast: ToastData | null) => void;
+}) {
   return (
-    <View className="gap-3">
-      {listItems.map((item) => (
-        <View
-          key={item.id}
-          className="flex-row items-center justify-between gap-3 rounded-lg bg-surface-container-lowest p-4 shadow-card"
-        >
-          <View className="min-w-0 flex-1">
-            <Text
-              numberOfLines={1}
-              className="font-label text-label-md font-semibold text-on-surface"
-            >
-              {item.title}
-            </Text>
-            <Text className="font-label text-label-sm capitalize text-on-surface-variant">
-              {CATEGORY_LABEL[item.category] ?? item.category}
-            </Text>
-          </View>
-          <View className="flex-row items-center gap-2">
-            <View className="rounded-full bg-primary-container px-2.5 py-1">
-              <Text className="font-label text-label-sm font-semibold text-on-primary-container">
-                {item.quantity > 0 ? `x${item.quantity}` : "1"}
-              </Text>
-            </View>
-          </View>
-        </View>
-      ))}
-    </View>
+    <CollaborativeList
+      items={items}
+      currentUserId={currentUserId}
+      onAdd={onAdd}
+      onClaim={onClaim}
+      onRelease={onRelease}
+      onDelete={onDelete}
+      isAdding={isAdding}
+      pendingItemId={pendingItemId}
+      onNotify={onNotify}
+    />
   );
 }

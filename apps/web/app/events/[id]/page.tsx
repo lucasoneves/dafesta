@@ -7,10 +7,15 @@ import {
   useEventDetails,
   addParticipant,
   updateRsvpStatus,
+  addListItem,
+  claimListItem,
+  releaseListItem,
+  deleteListItem,
 } from "@dafesta/database";
 import type { EventParticipantStatus } from "@dafesta/types";
 import { EventDetailsScreen } from "@dafesta/ui/event-details-screen";
 import type { InviteParticipantInput } from "@dafesta/ui/rsvp-panel";
+import type { AddListItemInput } from "@dafesta/ui/collaborative-list";
 
 export default function EventDetailsPage() {
   const params = useParams<{ id: string }>();
@@ -22,6 +27,10 @@ export default function EventDetailsPage() {
   const [isUpdatingParticipantId, setIsUpdatingParticipantId] = useState<
     string | null
   >(null);
+  const [isAddingListItem, setIsAddingListItem] = useState(false);
+  const [pendingListItemId, setPendingListItemId] = useState<string | null>(
+    null
+  );
   const router = useRouter();
 
   useEffect(() => {
@@ -61,11 +70,51 @@ export default function EventDetailsPage() {
     }
   }
 
+  async function handleAddListItem(input: AddListItemInput) {
+    if (!eventId) return;
+    setIsAddingListItem(true);
+    try {
+      await addListItem(eventId, input, user);
+    } finally {
+      setIsAddingListItem(false);
+    }
+  }
+
+  async function handleClaimListItem(itemId: string) {
+    if (!eventId) return;
+    setPendingListItemId(itemId);
+    try {
+      await claimListItem(eventId, itemId, user);
+    } finally {
+      setPendingListItemId(null);
+    }
+  }
+
+  async function handleReleaseListItem(itemId: string) {
+    if (!eventId) return;
+    setPendingListItemId(itemId);
+    try {
+      await releaseListItem(eventId, itemId, user);
+    } finally {
+      setPendingListItemId(null);
+    }
+  }
+
+  async function handleDeleteListItem(itemId: string) {
+    setPendingListItemId(itemId);
+    try {
+      await deleteListItem(itemId);
+    } finally {
+      setPendingListItemId(null);
+    }
+  }
+
   return (
     <EventDetailsScreen
       event={event}
       participants={participants}
       listItems={listItems}
+      currentUserId={user?.uid ?? ""}
       loading={loading}
       notFound={notFound}
       error={error}
@@ -79,6 +128,12 @@ export default function EventDetailsPage() {
       onUpdateStatus={handleUpdateStatus}
       isUpdatingParticipantId={isUpdatingParticipantId}
       isAdding={isAdding}
+      onAddListItem={handleAddListItem}
+      onClaimListItem={handleClaimListItem}
+      onReleaseListItem={handleReleaseListItem}
+      onDeleteListItem={handleDeleteListItem}
+      isAddingListItem={isAddingListItem}
+      pendingListItemId={pendingListItemId}
     />
   );
 }

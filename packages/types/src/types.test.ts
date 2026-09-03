@@ -93,10 +93,12 @@ describe("Domínio completo", () => {
       category: "food",
       quantity: 1,
       claimedByUserId: null,
+      claimedByName: null,
       isCompleted: false,
       createdAt: "now",
       updatedAt: "now",
     };
     expectTypeOf(item.claimedByUserId).toEqualTypeOf<string | null>();
+    expectTypeOf(item.claimedByName).toEqualTypeOf<string | null>();
   });
 });

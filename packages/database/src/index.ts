@@ -51,6 +51,15 @@ export type {
 } from "./hooks/use-event-details.ts";
 
 export {
+  addListItem,
+  claimListItem,
+  releaseListItem,
+  deleteListItem,
+  getUserName,
+} from "./list-items.ts";
+export type { AddListItemResult } from "./list-items.ts";
+
+export {
   browserLocalPersistence,
   browserSessionPersistence,
 } from "firebase/auth";

@@ -5,6 +5,7 @@ export interface ListItem {
   category: ItemCategory;
   quantity: number;
   claimedByUserId: string | null;
+  claimedByName: string | null;
   isCompleted: boolean;
   createdAt: string;
   updatedAt: string;
@@ -20,5 +21,10 @@ export type ItemCategory =
 
 export type CreateListItemPayload = Omit<
   ListItem,
-  "id" | "claimedByUserId" | "isCompleted" | "createdAt" | "updatedAt"
+  | "id"
+  | "claimedByUserId"
+  | "claimedByName"
+  | "isCompleted"
+  | "createdAt"
+  | "updatedAt"
 >;
